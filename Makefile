@@ -11,7 +11,7 @@ GZIP_COMPRESSION ?= no
 COMPRESS_W_YUI ?= no
 YUI-COMPRESSOR ?= /usr/bin/yui-compressor
 USE_HEATSHRINK ?= yes
-
+WEB_DIR ?= ../html
 
 
 # Output directors to store intermediate compiled files
@@ -46,10 +46,10 @@ SDK_LDDIR	= ld
 SDK_INCDIR	= include
 
 # select which tools to use as compiler, librarian and linker
-CC		:= $(XTENSA_TOOLS_ROOT)xtensa-lx106-elf-gcc
-AR		:= $(XTENSA_TOOLS_ROOT)xtensa-lx106-elf-ar
-LD		:= $(XTENSA_TOOLS_ROOT)xtensa-lx106-elf-gcc
-OBJCOPY	:= $(XTENSA_TOOLS_ROOT)xtensa-lx106-elf-objcopy
+CC		:= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
+AR		:= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-ar
+LD		:= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
+OBJCOPY	:= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-objcopy
 
 ####
 #### no user configurable options below here
@@ -115,16 +115,16 @@ $(BUILD_DIR):
 webpages.espfs: $(HTMLDIR) espfs/mkespfsimage/mkespfsimage
 ifeq ("$(COMPRESS_W_YUI)","yes")
 	$(Q) rm -rf html_compressed;
-	$(Q) cp -r ../html html_compressed;
+	$(Q) cp -r $(WEB_DIR) html_compressed;
 	$(Q) echo "Compression assets with yui-compressor. This may take a while..."
 	$(Q) for file in `find html_compressed -type f -name "*.js"`; do $(YUI-COMPRESSOR) --type js $$file -o $$file; done
 	$(Q) for file in `find html_compressed -type f -name "*.css"`; do $(YUI-COMPRESSOR) --type css $$file -o $$file; done
-	$(Q) awk "BEGIN {printf \"YUI compression ratio was: %.2f%%\\n\", (`du -b -s html_compressed/ | sed 's/\([0-9]*\).*/\1/'`/`du -b -s ../html/ | sed 's/\([0-9]*\).*/\1/'`)*100}"
+	$(Q) awk "BEGIN {printf \"YUI compression ratio was: %.2f%%\\n\", (`du -b -s html_compressed/ | sed 's/\([0-9]*\).*/\1/'`/`du -b -s $(WEB_DIR) | sed 's/\([0-9]*\).*/\1/'`)*100}"
 # mkespfsimage will compress html, css and js files with gzip by default if enabled
 # override with -g cmdline parameter
 	$(Q) cd html_compressed; find  | $(THISDIR)/espfs/mkespfsimage/mkespfsimage > $(THISDIR)/webpages.espfs; cd ..;
 else
-	$(Q) cd ../html; find | $(THISDIR)/espfs/mkespfsimage/mkespfsimage > $(THISDIR)/webpages.espfs; cd ..
+	$(Q) cd $(WEB_DIR); find | $(THISDIR)/espfs/mkespfsimage/mkespfsimage > $(THISDIR)/webpages.espfs; cd ..
 endif
 
 libwebpages-espfs.a: webpages.espfs
