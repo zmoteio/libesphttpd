@@ -18,13 +18,6 @@ WEB_DIR ?= ../html
 # relative to the project directory
 BUILD_BASE	= build
 
-# Base directory for the compiler. Needs a / at the end; if not set it'll use the tools that are in
-# the PATH.
-XTENSA_TOOLS_ROOT ?= 
-
-# base directory of the ESP8266 SDK package, absolute
-SDK_BASE	?= /opt/Espressif/ESP8266_SDK
-
 # name for the target project
 LIB		= libesphttpd.a
 
