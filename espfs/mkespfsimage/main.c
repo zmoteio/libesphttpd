@@ -25,6 +25,7 @@
 #include <zlib.h>
 #endif
 
+#define write(fn, p, sz) fwrite((p), (sz), 1, stdout)
 
 //Routines to convert host format to the endianness used in the xtensa
 short htoxs(short in) {
@@ -175,13 +176,14 @@ int parseGzipExtensions(char *input) {
 }
 #endif
 
-int handleFile(int f, char *name, int compression, int level, char **compName) {
+int handleFile(FILE *f, char *name, int compression, int level, char **compName) {
 	char *fdat, *cdat;
 	off_t size, csize;
 	EspFsHeader h;
 	int nameLen;
 	int8_t flags = 0;
-	size=lseek(f, 0, SEEK_END);
+	fseek(f, 0, SEEK_END);
+	size=ftell(f);
 	#if 0
 	fdat=mmap(NULL, size, PROT_READ, MAP_SHARED, f, 0);
 	if (fdat==MAP_FAILED) {
@@ -189,10 +191,13 @@ int handleFile(int f, char *name, int compression, int level, char **compName) {
 		return 0;
 	}
 	#else
+	fseek(f, 0, SEEK_SET);
 	if (!(fdat = malloc(size))) {
 		perror("malloc");
 		return 0;
 	}
+	fread(fdat, size, 1, f);
+	fclose(f);
 	#endif
 #ifdef ESPFS_GZIP
 	if (shouldCompressGzip(name)) {
@@ -282,7 +287,7 @@ void finishArchive() {
 }
 
 int main(int argc, char **argv) {
-	int f, x;
+	int x;
 	char fileName[1024];
 	char *realName;
 	struct stat statBuf;
@@ -291,7 +296,7 @@ int main(int argc, char **argv) {
 	int err=0;
 	int compType;  //default compression type - heatshrink
 	int compLvl=-1;
-
+	FILE *f;
 #ifdef ESPFS_HEATSHRINK
 	compType = COMPRESS_HEATSHRINK;
 #else
@@ -341,7 +346,7 @@ int main(int argc, char **argv) {
 #endif
 		exit(0);
 	}
-
+	setmode(fileno(stdout), O_BINARY); // harik: windoze only
 	while(fgets(fileName, sizeof(fileName), stdin)) {
 		//Kill off '\n' at the end
 		fileName[strlen(fileName)-1]=0;
@@ -352,12 +357,13 @@ int main(int argc, char **argv) {
 			realName=fileName;
 			if (fileName[0]=='.') realName++;
 			if (realName[0]=='/') realName++;
-			f=open(fileName, O_RDONLY);
-			if (f>0) {
+			f=fopen(fileName, "rb");
+			if (f) {
 				char *compName = "unknown";
+				//setmode(f, O_BINARY);
 				rate=handleFile(f, realName, compType, compLvl, &compName);
 				fprintf(stderr, "%s (%d%%, %s)\n", realName, rate, compName);
-				close(f);
+				//close(f);
 			} else {
 				perror(fileName);
 			}
