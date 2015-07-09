@@ -393,6 +393,12 @@ static void ICACHE_FLASH_ATTR httpdParseHeader(char *h, HttpdConnData *conn) {
 	} else if (os_strncmp(h, "POST ", 5)==0) {
 		conn->requestType = HTTPD_METHOD_POST;
 		first_line = true;
+	} else if (os_strncmp(h, "PUT ", 4)==0) {
+		conn->requestType = HTTPD_METHOD_PUT;
+		first_line = true;
+	} else if (os_strncmp(h, "OPTIONS ", 8)==0) {
+		conn->requestType = HTTPD_METHOD_OPTIONS;
+		first_line = true;
 	}
 
 	if (first_line) {
