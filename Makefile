@@ -87,6 +87,7 @@ endef
 .PHONY: all checkdirs clean webpages.espfs submodules
 
 all: checkdirs $(LIB) webpages.espfs libwebpages-espfs.a
+lib: $(LIB)
 
 submodules: lib/heatshrink/Makefile
 lib/heatshrink/Makefile:

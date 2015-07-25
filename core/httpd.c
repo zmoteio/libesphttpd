@@ -21,7 +21,7 @@ Esp8266 http server - core routines
 //Max amount of connections
 #define MAX_CONN 8
 //Max post buffer len
-#define MAX_POST 1024
+#define MAX_POST (4*1024)
 //Max send buffer len
 #define MAX_SENDBUFF_LEN 2048
 
