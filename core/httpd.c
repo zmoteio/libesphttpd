@@ -379,24 +379,43 @@ static void ICACHE_FLASH_ATTR httpdProcessRequest(HttpdConnData *conn) {
 }
 
 //Parse a line of header data and modify the connection data accordingly.
+#define tolc(c)  (((c) > 'A')?((c) - 'A' + 'a'):(c))
+static int ICACHE_FLASH_ATTR strncasecmp(const char *x, const char *y, int n)
+{
+	while (*x && *y && n) {
+		if (tolc(*x) != tolc(*y))
+			return tolc(*x) - tolc(*y);
+		++x;
+		++y;
+		--n;
+	}
+	if (!n)
+		return 0;
+	return tolc(*x) - tolc(*y);
+}
+#define MATCH_AT_START(x, str) (strncasecmp(x, str, os_strlen(str)) == 0)
 static void ICACHE_FLASH_ATTR httpdParseHeader(char *h, HttpdConnData *conn) {
 	int i;
 	char first_line = false;
 	
-	if (os_strncmp(h, "GET ", 4)==0) {
+	if (MATCH_AT_START(h, "GET ")) {
 		conn->requestType = HTTPD_METHOD_GET;
 		first_line = true;
-	} else if (os_strncmp(h, "Host:", 5)==0) {
-		i=5;
+	} else if (MATCH_AT_START(h, "Host:")) {
+		i=os_strlen("Host:");
 		while (h[i]==' ') i++;
 		conn->hostName=&h[i];
-	} else if (os_strncmp(h, "POST ", 5)==0) {
+	} else if (MATCH_AT_START(h, "Origin:")) {
+		i=os_strlen("Origin:");
+		while (h[i]==' ') i++;
+		conn->origin=&h[i];
+	} else if (MATCH_AT_START(h, "POST ")) {
 		conn->requestType = HTTPD_METHOD_POST;
 		first_line = true;
-	} else if (os_strncmp(h, "PUT ", 4)==0) {
+	} else if (MATCH_AT_START(h, "PUT ")) {
 		conn->requestType = HTTPD_METHOD_PUT;
 		first_line = true;
-	} else if (os_strncmp(h, "OPTIONS ", 8)==0) {
+	} else if (MATCH_AT_START(h, "OPTIONS ")) {
 		conn->requestType = HTTPD_METHOD_OPTIONS;
 		first_line = true;
 	}

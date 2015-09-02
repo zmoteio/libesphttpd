@@ -33,6 +33,7 @@ struct HttpdConnData {
 	void *cgiData;
 	void *cgiPrivData; // Used for streaming handlers storing state between requests
 	char *hostName;
+	char *origin;
 	HttpdPriv *priv;
 	cgiSendCallback cgi;
 	HttpdPostData *post;
