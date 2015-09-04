@@ -3,7 +3,7 @@
 THISDIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 #Include httpd config from lower level, if it exists
--include ../esphttpdconfig.mk
+-include ../buildconfig.mk
 
 
 #Default options. If you want to change them, please create ../esphttpdconfig.mk with the options you want in it.
