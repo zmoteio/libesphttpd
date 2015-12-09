@@ -29,7 +29,7 @@ EXTRA_INCDIR	= ./include \
 
 
 # compiler flags using during compilation of source files
-CFLAGS		+= -Os -ggdb -std=c99 -Werror -Wpointer-arith -Wundef -Wall -Wl,-EL -fno-inline-functions \
+CFLAGS		+= -Os -ggdb -std=c99 -Wpointer-arith -Wundef -Wall -Wl,-EL -fno-inline-functions \
 		-nostdlib -mlongcalls -mtext-section-literals  -D__ets__ -DICACHE_FLASH -D_STDINT_H \
 		-Wno-address
 
