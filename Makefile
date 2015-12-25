@@ -11,8 +11,8 @@ GZIP_COMPRESSION ?= no
 COMPRESS_W_YUI ?= no
 YUI-COMPRESSOR ?= /usr/bin/yui-compressor
 USE_HEATSHRINK ?= yes
-WEB_DIR ?= ../html
-
+HTTPD_WEBSOCKETS ?= yes
+USE_OPENSDK ?= no
 
 # Output directors to store intermediate compiled files
 # relative to the project directory
@@ -68,12 +68,23 @@ Q := @
 vecho := @echo
 endif
 
+
+ifeq ("$(USE_OPENSDK)","yes")
+CFLAGS		+= -DUSE_OPENSDK
+else
+CFLAGS		+= -D_STDINT_H
+endif
+
 ifeq ("$(GZIP_COMPRESSION)","yes")
 CFLAGS		+= -DGZIP_COMPRESSION
 endif
 
 ifeq ("$(USE_HEATSHRINK)","yes")
 CFLAGS		+= -DESPFS_HEATSHRINK
+endif
+
+ifeq ("$(HTTPD_WEBSOCKETS)","yes")
+CFLAGS		+= -DHTTPD_WEBSOCKETS
 endif
 
 vpath %.c $(SRC_DIR)
@@ -106,31 +117,6 @@ $(BUILD_DIR):
 	$(Q) mkdir -p $@
 
 
-webpages.espfs: $(HTMLDIR) espfs/mkespfsimage/mkespfsimage
-ifeq ("$(COMPRESS_W_YUI)","yes")
-	$(Q) rm -rf html_compressed;
-	$(Q) cp -r $(WEB_DIR) html_compressed;
-	$(Q) echo "Compression assets with yui-compressor. This may take a while..."
-	$(Q) for file in `find html_compressed -type f -name "*.js"`; do $(YUI-COMPRESSOR) --type js $$file -o $$file; done
-	$(Q) for file in `find html_compressed -type f -name "*.css"`; do $(YUI-COMPRESSOR) --type css $$file -o $$file; done
-	$(Q) awk "BEGIN {printf \"YUI compression ratio was: %.2f%%\\n\", (`du -b -s html_compressed/ | sed 's/\([0-9]*\).*/\1/'`/`du -b -s $(WEB_DIR) | sed 's/\([0-9]*\).*/\1/'`)*100}"
-# mkespfsimage will compress html, css and js files with gzip by default if enabled
-# override with -g cmdline parameter
-	$(Q) cd html_compressed; find  | $(THISDIR)/espfs/mkespfsimage/mkespfsimage > $(THISDIR)/webpages.espfs; cd ..;
-else
-	$(Q) cd $(WEB_DIR); find | $(THISDIR)/espfs/mkespfsimage/mkespfsimage > $(THISDIR)/webpages.espfs; cd ..
-endif
-
-libwebpages-espfs.a: webpages.espfs
-	$(Q) $(OBJCOPY) -I binary -O elf32-xtensa-le -B xtensa --rename-section .data=.irom0.literal \
-		--redefine-sym _binary_webpages_espfs_start=webpages_espfs_start \
-		--redefine-sym _binary_webpages_espfs_end=webpages_espfs_end \
-		--redefine-sym _binary_webpages_espfs_size=webpages_espfs_size \
-		webpages.espfs build/webpages.espfs.o
-	$(Q) $(AR) cru $@ build/webpages.espfs.o
-
-espfs/mkespfsimage/mkespfsimage: espfs/mkespfsimage/
-	$(Q) $(MAKE) -C espfs/mkespfsimage USE_HEATSHRINK="$(USE_HEATSHRINK)" GZIP_COMPRESSION="$(GZIP_COMPRESSION)"
 
 clean:
 	$(Q) rm -f $(LIB)

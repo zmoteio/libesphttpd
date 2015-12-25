@@ -16,12 +16,12 @@
 #define HTTPD_METHOD_TRACE 6
 #define HTTPD_METHOD_HEAD 7
 
-
 typedef struct HttpdPriv HttpdPriv;
 typedef struct HttpdConnData HttpdConnData;
 typedef struct HttpdPostData HttpdPostData;
 
 typedef int (* cgiSendCallback)(HttpdConnData *connData);
+typedef int (* cgiRecvHandler)(HttpdConnData *connData, char *data, int len);
 
 //A struct describing a http connection. This gets passed to cgi functions.
 struct HttpdConnData {
@@ -36,7 +36,10 @@ struct HttpdConnData {
 	char *origin;
 	HttpdPriv *priv;
 	cgiSendCallback cgi;
+	cgiRecvHandler recvHdl;
 	HttpdPostData *post;
+	int remote_port;
+	uint8 remote_ip[4];
 };
 
 //A struct describing the POST data sent inside the http connection.  This is used by the CGI functions
@@ -70,5 +73,6 @@ void ICACHE_FLASH_ATTR httpdHeader(HttpdConnData *conn, const char *field, const
 void ICACHE_FLASH_ATTR httpdEndHeaders(HttpdConnData *conn);
 int ICACHE_FLASH_ATTR httpdGetHeader(HttpdConnData *conn, char *header, char *ret, int retLen);
 int ICACHE_FLASH_ATTR httpdSend(HttpdConnData *conn, const char *data, int len);
+void ICACHE_FLASH_ATTR httpdFlushSendBuffer(HttpdConnData *conn);
 
 #endif

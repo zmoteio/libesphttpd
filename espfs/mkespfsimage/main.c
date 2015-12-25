@@ -5,8 +5,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include <sys/mman.h>
-//#include <arpa/inet.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include "espfs.h"
 #include "espfsformat.h"
@@ -182,6 +181,7 @@ int handleFile(FILE *f, char *name, int compression, int level, char **compName)
 	EspFsHeader h;
 	int nameLen;
 	int8_t flags = 0;
+
 	fseek(f, 0, SEEK_END);
 	size=ftell(f);
 	#if 0
@@ -253,11 +253,8 @@ int handleFile(FILE *f, char *name, int compression, int level, char **compName)
 		write(1, "\000", 1);
 		csize++;
 	}
-	#if 0
-	munmap(fdat, size);
-	#else
 	free(fdat);
-	#endif
+
 	if (compName != NULL) {
 		if (h.compression==COMPRESS_HEATSHRINK) {
 			*compName = "heatshrink";
@@ -323,7 +320,7 @@ int main(int argc, char **argv) {
 
 #ifdef ESPFS_GZIP
 	if (gzipExtensions == NULL) {
-		parseGzipExtensions(strdup("html,css,js"));
+		parseGzipExtensions(strdup("html,css,js,svg"));
 	}
 #endif
 
