@@ -5,9 +5,10 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include <sys/mman.h>
-//#include <arpa/inet.h>
 #include <string.h>
+#ifdef __MINGW32__
+#include <io.h>
+#endif
 #include "espfs.h"
 #include "espfsformat.h"
 
@@ -25,7 +26,14 @@
 #include <zlib.h>
 #endif
 
+<<<<<<< HEAD
 #define write(fn, p, sz) fwrite((p), (sz), 1, stdout)
+=======
+//Cygwin e.a. needs O_BINARY. Don't miscompile if it's not set.
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+>>>>>>> d9bf211096a4e5d367f30353c216c812509943f9
 
 //Routines to convert host format to the endianness used in the xtensa
 short htoxs(short in) {
@@ -182,23 +190,12 @@ int handleFile(FILE *f, char *name, int compression, int level, char **compName)
 	EspFsHeader h;
 	int nameLen;
 	int8_t flags = 0;
-	fseek(f, 0, SEEK_END);
-	size=ftell(f);
-	#if 0
-	fdat=mmap(NULL, size, PROT_READ, MAP_SHARED, f, 0);
-	if (fdat==MAP_FAILED) {
-		perror("mmap");
-		return 0;
-	}
-	#else
-	fseek(f, 0, SEEK_SET);
-	if (!(fdat = malloc(size))) {
-		perror("malloc");
-		return 0;
-	}
-	fread(fdat, size, 1, f);
-	fclose(f);
-	#endif
+	size=lseek(f, 0, SEEK_END);
+	fdat=malloc(size);
+	lseek(f, 0, SEEK_SET);
+	read(f, fdat, size);
+	
+
 #ifdef ESPFS_GZIP
 	if (shouldCompressGzip(name)) {
 		csize = size*3;
@@ -253,11 +250,8 @@ int handleFile(FILE *f, char *name, int compression, int level, char **compName)
 		write(1, "\000", 1);
 		csize++;
 	}
-	#if 0
-	munmap(fdat, size);
-	#else
 	free(fdat);
-	#endif
+
 	if (compName != NULL) {
 		if (h.compression==COMPRESS_HEATSHRINK) {
 			*compName = "heatshrink";
@@ -271,7 +265,7 @@ int handleFile(FILE *f, char *name, int compression, int level, char **compName)
 			*compName = "unknown";
 		}
 	}
-	return (csize*100)/size;
+	return size ? (csize*100)/size : 100;
 }
 
 //Write final dummy header with FLAG_LASTFILE set.
@@ -296,7 +290,10 @@ int main(int argc, char **argv) {
 	int err=0;
 	int compType;  //default compression type - heatshrink
 	int compLvl=-1;
-	FILE *f;
+
+#ifdef __MINGW32__
+	setmode(fileno(stdout), O_BINARY);
+#endif
 #ifdef ESPFS_HEATSHRINK
 	compType = COMPRESS_HEATSHRINK;
 #else
@@ -323,7 +320,7 @@ int main(int argc, char **argv) {
 
 #ifdef ESPFS_GZIP
 	if (gzipExtensions == NULL) {
-		parseGzipExtensions(strdup("html,css,js"));
+		parseGzipExtensions(strdup("html,css,js,svg"));
 	}
 #endif
 
@@ -357,8 +354,8 @@ int main(int argc, char **argv) {
 			realName=fileName;
 			if (fileName[0]=='.') realName++;
 			if (realName[0]=='/') realName++;
-			f=fopen(fileName, "rb");
-			if (f) {
+			f=open(fileName, O_RDONLY|O_BINARY);
+			if (f>0) {
 				char *compName = "unknown";
 				//setmode(f, O_BINARY);
 				rate=handleFile(f, realName, compType, compLvl, &compName);
