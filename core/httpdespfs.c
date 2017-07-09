@@ -117,26 +117,26 @@ int ICACHE_FLASH_ATTR cgiEspFsTemplate(HttpdConnData *connData) {
 		//Connection aborted. Clean up.
 		((TplCallback)(connData->cgiArg))(connData, NULL, &tpd->tplArg);
 		espFsClose(tpd->file);
-		free(tpd);
+		FREE(tpd);
 		return HTTPD_CGI_DONE;
 	}
 
 	if (tpd==NULL) {
 		//First call to this cgi. Open the file so we can read it.
-		tpd=(TplData *)malloc(sizeof(TplData));
+		tpd=(TplData *)MALLOC(sizeof(TplData));
 		if (tpd==NULL) return HTTPD_CGI_NOTFOUND;
 		tpd->file=espFsOpen(connData->url);
 		tpd->tplArg=NULL;
 		tpd->tokenPos=-1;
 		if (tpd->file==NULL) {
 			espFsClose(tpd->file);
-			free(tpd);
+			FREE(tpd);
 			return HTTPD_CGI_NOTFOUND;
 		}
 		if (espFsFlags(tpd->file) & FLAG_GZIP) {
 			httpd_printf("cgiEspFsTemplate: Trying to use gzip-compressed file %s as template!\n", connData->url);
 			espFsClose(tpd->file);
-			free(tpd);
+			FREE(tpd);
 			return HTTPD_CGI_NOTFOUND;
 		}
 		connData->cgiData=tpd;
@@ -188,7 +188,7 @@ int ICACHE_FLASH_ATTR cgiEspFsTemplate(HttpdConnData *connData) {
 		//We're done.
 		((TplCallback)(connData->cgiArg))(connData, NULL, &tpd->tplArg);
 		espFsClose(tpd->file);
-		free(tpd);
+		FREE(tpd);
 		return HTTPD_CGI_DONE;
 	} else {
 		//Ok, till next time.

@@ -101,5 +101,6 @@ void httpdRecvCb(ConnTypePtr conn, char *remIp, int remPort, char *data, unsigne
 void httpdDisconCb(ConnTypePtr conn, char *remIp, int remPort);
 int httpdConnectCb(ConnTypePtr conn, char *remIp, int remPort);
 
+#include "../user/debug.h"
 
 #endif

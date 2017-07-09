@@ -204,7 +204,7 @@ static void platHttpServerTask(void *pvParameters) {
 				}
 
 				if (FD_ISSET(rconn[x].fd, &readset)) {
-					precvbuf=(char*)malloc(RECV_BUF_SIZE);
+					precvbuf=(char*)MALLOC(RECV_BUF_SIZE);
 					if (precvbuf==NULL) {
 						httpd_printf("platHttpServerTask: memory exhausted!\n");
 						httpdDisconCb(&rconn[x], rconn[x].ip, rconn[x].port);
@@ -221,7 +221,7 @@ static void platHttpServerTask(void *pvParameters) {
 						close(rconn[x].fd);
 						rconn[x].fd=-1;
 					}
-					if (precvbuf) free(precvbuf);
+					if (precvbuf) FREE(precvbuf);
 				}
 			}
 		}
